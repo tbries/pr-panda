@@ -1,0 +1,10 @@
+﻿{
+  "frameworks": {
+    "net46":{
+      "dependencies": {
+        "Microsoft.TeamFoundationServer.Client": "15.113.0-preview",
+        "Microsoft.VisualStudio.Services.Client": "15.113.0-preview"
+      }
+    }
+  }
+}
