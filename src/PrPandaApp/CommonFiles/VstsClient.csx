@@ -23,7 +23,7 @@ public class VstsClient
         return this.client.GetPullRequestsByProjectAsync(project, searchCriteria);
     }
 
-    public async Task<IEnumerable<GitPullRequestCommentThread>> GetCommentThreadsAsync(Guid repositoryId, int pullRequestId)
+    public async Task<List<GitPullRequestCommentThread>> GetCommentThreadsAsync(Guid repositoryId, int pullRequestId)
     {
         var validCommentThreads = new List<GitPullRequestCommentThread>();
         var allCommentThreads = await this.client.GetThreadsAsync(repositoryId, pullRequestId);
