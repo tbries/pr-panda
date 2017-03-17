@@ -27,18 +27,6 @@ public class TeamsClient
 
     public async Task PostMessageAsync(Payload payload)
     {
-        //var payloadJson = JsonConvert.SerializeObject(payload);
-
-        //using (var client = new WebClient())
-        //{
-        //    var data = new NameValueCollection
-        //    {
-        //        ["payload"] = payloadJson
-        //    };
-
-        //    var response = client.UploadValues(webhookUri, "POST", data);
-        //}
-
         using (var client = new HttpClient())
         {
             var response = await client.PostAsJsonAsync(webhookUri, payload);

@@ -46,7 +46,7 @@ public async static Task Run(TimerInfo myTimer, TraceWriter log)
 
         if (PullRequestNeedsToBePosted(historyTable, pr, threads))
         {
-            var commentAuthors = await GetPullRequestCommenterFirstNamesAsStringAsync(vstsClient, pr, threads);
+            var commentAuthors = await GetPullRequestCommenterNamesAsStringAsync(vstsClient, pr, threads);
             var messageText = GenerateMessageText(pr, commentAuthors);
 
             await teamsClient.PostMessageAsync(messageText);
@@ -166,7 +166,7 @@ public static int GetCommentThreadsHashCode(List<GitPullRequestCommentThread> co
     return hashCode;
 }
 
-public static async Task<string> GetPullRequestCommenterFirstNamesAsStringAsync(VstsClient vstsClient, GitPullRequest pullRequest, List<GitPullRequestCommentThread> commentThreads)
+public static async Task<string> GetPullRequestCommenterNamesAsStringAsync(VstsClient vstsClient, GitPullRequest pullRequest, List<GitPullRequestCommentThread> commentThreads)
 {
     var commenterDisplayNames = new List<string>();
 
