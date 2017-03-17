@@ -1,7 +1,9 @@
 ﻿#load "..\CommonFiles\VstsClient.csx"
+#load "..\CommonFiles\TeamsClient.csx"
 #load "PullRequestSummary.csx"
 
 using System;
+using System.Text;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -15,7 +17,9 @@ public async static Task Run(TimerInfo myTimer, TraceWriter log)
     var personalAccessToken = GetEnvironmentVariable("VstsPersonalAccessToken");
     var collectionUri = new Uri(GetEnvironmentVariable("VstsCollectionUri"));
     var reviewerId = new Guid(GetEnvironmentVariable("VstsReviewerId"));
-    var project = GetEnvironmentVariable("VstsProject");
+    var project1 = GetEnvironmentVariable("VstsProject1");
+    var project2 = GetEnvironmentVariable("VstsProject2");
+    var webHookUri = GetEnvironmentVariable("WebHookUri");
 
     var historyStorageAccount = CloudStorageAccount.Parse(GetEnvironmentVariable("HistoryStorage"));
     var historyTableClient = historyStorageAccount.CreateCloudTableClient();
@@ -23,9 +27,18 @@ public async static Task Run(TimerInfo myTimer, TraceWriter log)
     historyTable.CreateIfNotExists();
 
     var vstsClient = new VstsClient(collectionUri, personalAccessToken);
+    var teamsClient = new TeamsClient(webHookUri);
 
-    var pullRequests = await vstsClient.GetActivePullRequestsAsync(project, reviewerId);
-    log.Info($"Found {pullRequests.Count} active pull requests to check.");
+    var pullRequests = await vstsClient.GetActivePullRequestsAsync(project1, reviewerId);
+    log.Info($"Found {pullRequests.Count} active pull requests to check in the {project1}.");
+
+    if(!string.IsNullOrEmpty(project2))
+    {
+        var pullRequestsFromProjectTwo = await vstsClient.GetActivePullRequestsAsync(project2, reviewerId);
+        log.Info($"Found {pullRequestsFromProjectTwo.Count} active pull requests to check in the {project2}.");
+
+        pullRequests.AddRange(pullRequestsFromProjectTwo);
+    }
 
     foreach (var pr in pullRequests)
     {
@@ -33,7 +46,10 @@ public async static Task Run(TimerInfo myTimer, TraceWriter log)
 
         if (PullRequestNeedsToBePosted(historyTable, pr, threads))
         {
-            
+            var commentAuthors = await GetPullRequestCommenterFirstNamesAsStringAsync(vstsClient, pr, threads);
+            var messageText = GenerateMessageText(pr, commentAuthors);
+
+            await teamsClient.PostMessageAsync(messageText);
         }
     }
 }
@@ -148,4 +164,42 @@ public static int GetCommentThreadsHashCode(List<GitPullRequestCommentThread> co
     }
 
     return hashCode;
+}
+
+public static async Task<string> GetPullRequestCommenterFirstNamesAsStringAsync(VstsClient vstsClient, GitPullRequest pullRequest, List<GitPullRequestCommentThread> commentThreads)
+{
+    var commenterDisplayNames = new List<string>();
+
+    foreach (var thread in commentThreads)
+    {
+        var commentAuthor = await vstsClient.GetCommentThreadAuthorAsync(pullRequest.Repository.Id, pullRequest.PullRequestId, thread.Id);
+        var authorName = commentAuthor.DisplayName;
+
+        if(!commenterDisplayNames.Contains(authorName))
+        {
+            commenterDisplayNames.Add(authorName);
+        }
+    }
+
+    var builder = new StringBuilder(commenterDisplayNames.First());
+    for (var i = 1; i < commenterDisplayNames.Count - 1; i++)
+    {
+        builder.Append(", " + commenterDisplayNames[i]);
+    }
+
+    if (commenterDisplayNames.Count > 1)
+    {
+        builder.Append(" & " + commenterDisplayNames.Last());
+    }
+
+    return builder.ToString();
+}
+
+public static string GenerateMessageText(GitPullRequest pullRequest, string commenterList)
+{
+    var vstsCollectionUri = pullRequest.Url.Split('_')[0];
+    var project = pullRequest.Repository.ProjectReference.Name;
+    var pullRequestUri = vstsCollectionUri + "_git/" + project + "/pullrequest/" + pullRequest.PullRequestId;
+
+    return $"**{pullRequest.CreatedBy.DisplayName}** has addressed all of the comments from **{commenterList}** on [pull request {pullRequest.PullRequestId}]({pullRequestUri}) *{pullRequest.Title}*";
 }
