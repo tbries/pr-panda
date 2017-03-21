@@ -1,6 +1,6 @@
 ﻿#load "..\CommonFiles\VstsClient.csx"
 #load "..\CommonFiles\TeamsClient.csx"
-#load "PullRequestSummary.csx"
+#load "..\CommonFiles\PullRequestSummary.csx"
 
 using System;
 using System.Text;
