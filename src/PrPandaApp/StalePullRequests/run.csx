@@ -86,9 +86,7 @@ private static int GetPullRequestHashCode(GitPullRequest pullRequest, List<GitPu
 
 public static bool PullRequestIsStale(CloudTable historyTable, GitPullRequest pullRequest, List<GitPullRequestCommentThread> commentThreads)
 {
-    return true;
-
-    var prIdMultiplier = 23; //sss
+    var prIdMultiplier = 29;
 
     var prId = pullRequest.PullRequestId;
     var hashCode = GetPullRequestHashCode(pullRequest, commentThreads);
@@ -128,7 +126,24 @@ public static bool PullRequestIsStale(CloudTable historyTable, GitPullRequest pu
 public static TeamsMessagePayload GenerateMessage(List<GitPullRequest> stalePullRequests)
 {
     var message = new TeamsMessagePayload();
-    message.Text = $"I found {stalePullRequests.Count} pull requests that haven't gotten much attention lately and could use some love:";
+    var pullRequestCount = stalePullRequests.Count;
+    if (pullRequestCount == 0)
+    {
+        message.Text = "Great work team, looks like all the pull requests I know about are progressing nicely!";
+        message.ThemeColor = "10B51B";
+
+        return message;
+    }
+
+    if (pullRequestCount == 1)
+    {
+        message.Text = $"I found a pull request that hasn't gotten much attention lately and could use some love:";
+    }
+    else
+    { 
+        message.Text = $"I found {pullRequestCount} pull requests that haven't gotten much attention lately and could use some love:";
+    }
+
     message.ThemeColor = "FFCC00";
     message.Sections = new List<TeamsSectionPayload>();
 
