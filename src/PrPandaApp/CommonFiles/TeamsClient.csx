@@ -16,7 +16,7 @@ public class TeamsClient
 
     public Task PostMessageAsync(string text, string themeColor = "006AFF")
     {
-        var payload = new Payload()
+        var payload = new TeamsMessagePayload()
         {
             Text = text,
             ThemeColor = themeColor
@@ -25,7 +25,7 @@ public class TeamsClient
         return PostMessageAsync(payload);
     }
 
-    public async Task PostMessageAsync(Payload payload)
+    public async Task PostMessageAsync(TeamsMessagePayload payload)
     {
         using (var client = new HttpClient())
         {
@@ -34,11 +34,20 @@ public class TeamsClient
     }
 }
 
-public class Payload
+public class TeamsMessagePayload
 {
     [JsonProperty("text")]
     public string Text { get; set; }
 
     [JsonProperty("themeColor")]
     public string ThemeColor { get; set; }
+
+    [JsonProperty("sections")]
+    public List<TeamsSectionPayload> Sections { get; set; }
+}
+
+public class TeamsSectionPayload
+{
+    [JsonProperty("title")]
+    public string Title { get; set; }
 }
