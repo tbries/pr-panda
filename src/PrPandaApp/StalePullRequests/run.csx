@@ -86,9 +86,7 @@ private static int GetPullRequestHashCode(GitPullRequest pullRequest, List<GitPu
 
 public static bool PullRequestIsStale(CloudTable historyTable, GitPullRequest pullRequest, List<GitPullRequestCommentThread> commentThreads)
 {
-    return true;
-
-    var prIdMultiplier = 23; //sss
+    var prIdMultiplier = 29;
 
     var prId = pullRequest.PullRequestId;
     var hashCode = GetPullRequestHashCode(pullRequest, commentThreads);
@@ -133,6 +131,8 @@ public static TeamsMessagePayload GenerateMessage(List<GitPullRequest> stalePull
     {
         message.Text = "Great work team, looks like all the pull requests I know about are progressing nicely!";
         message.ThemeColor = "10B51B";
+
+        return message;
     }
 
     if (pullRequestCount == 1)
