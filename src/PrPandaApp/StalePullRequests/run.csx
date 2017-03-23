@@ -52,7 +52,7 @@ public async static Task Run(TimerInfo myTimer, TraceWriter log)
         }
     }
 
-    var messageToPost = GenerateMessage(stalePullRequests);
+    var messageToPost = GenerateMessage(stalePullRequests, pullRequests.Count);
 
     await teamsClient.PostMessageAsync(messageToPost);
 }
@@ -77,7 +77,8 @@ private static int GetPullRequestHashCode(GitPullRequest pullRequest, List<GitPu
 
         foreach (var reviewer in pullRequest.Reviewers)
         {
-            runningHash += 11633 * (reviewer.Vote.GetHashCode() + 1) * reviewer.ReviewerUrl.GetHashCode();
+            // No vote is represented by zero, so reviewers who have not voted do not contribute to the hash.
+            runningHash += 11633 * reviewer.Vote * reviewer.ReviewerUrl.GetHashCode();
         }
     }
 
@@ -123,13 +124,13 @@ public static bool PullRequestIsStale(CloudTable historyTable, GitPullRequest pu
     return false;
 }
 
-public static TeamsMessagePayload GenerateMessage(List<GitPullRequest> stalePullRequests)
+public static TeamsMessagePayload GenerateMessage(List<GitPullRequest> stalePullRequests, int totalPrCount)
 {
     var message = new TeamsMessagePayload();
     var pullRequestCount = stalePullRequests.Count;
     if (pullRequestCount == 0)
     {
-        message.Text = "Great work team, looks like all the pull requests I know about are progressing nicely!";
+        message.Text = $"Great work team, looks like all {totalPrCount} pull requests I know about are progressing nicely!";
         message.ThemeColor = "10B51B";
 
         return message;
@@ -137,11 +138,11 @@ public static TeamsMessagePayload GenerateMessage(List<GitPullRequest> stalePull
 
     if (pullRequestCount == 1)
     {
-        message.Text = $"I found a pull request that hasn't gotten much attention lately and could use some love:";
+        message.Text = $"Of the {totalPrCount} pull requests I know about, I found a pull request that hasn't gotten much attention lately and could use some love:";
     }
     else
     { 
-        message.Text = $"I found {pullRequestCount} pull requests that haven't gotten much attention lately and could use some love:";
+        message.Text = $"Of the {totalPrCount} pull requests I know about, I found {pullRequestCount} pull requests that haven't gotten much attention lately and could use some love:";
     }
 
     message.ThemeColor = "FFCC00";
