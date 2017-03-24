@@ -152,7 +152,7 @@ public static TeamsMessagePayload GenerateMessage(List<GitPullRequest> stalePull
     {
         var vstsCollectionUri = pullRequest.Url.Split('_')[0];
         var project = pullRequest.Repository.ProjectReference.Name;
-        var pullRequestUri = vstsCollectionUri + "_git/" + project + "/pullrequest/" + pullRequest.PullRequestId;
+        var pullRequestUri = $"{vstsCollectionUri}{project}/_git/{pullRequest.Repository.Name}/pullrequest/{pullRequest.PullRequestId}";
 
         var sectionTitle = $"[PR {pullRequest.PullRequestId}]({pullRequestUri}): *{pullRequest.Title}* authored by **{pullRequest.CreatedBy.DisplayName}**.";
 
