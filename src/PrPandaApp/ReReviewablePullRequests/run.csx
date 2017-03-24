@@ -199,7 +199,7 @@ public static string GenerateMessageText(GitPullRequest pullRequest, string comm
 {
     var vstsCollectionUri = pullRequest.Url.Split('_')[0];
     var project = pullRequest.Repository.ProjectReference.Name;
-    var pullRequestUri = vstsCollectionUri + "_git/" + project + "/pullrequest/" + pullRequest.PullRequestId;
+    var pullRequestUri = $"{vstsCollectionUri}{project}/_git/{pullRequest.Repository.Name}/pullrequest/{pullRequest.PullRequestId}";
 
     return $"**{pullRequest.CreatedBy.DisplayName}** has addressed all of the comments from **{commenterList}** on [pull request {pullRequest.PullRequestId}]({pullRequestUri}) *{pullRequest.Title}*";
 }
